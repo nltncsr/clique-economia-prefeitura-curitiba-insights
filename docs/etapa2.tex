@@ -24,6 +24,7 @@
 \usepackage{amsmath}
 \usepackage{booktabs}
 \usepackage{array}
+\usepackage{multirow}
 \usepackage{tabularx}
 \usepackage{graphicx}
 \graphicspath{{images/}}
@@ -88,9 +89,9 @@
 \hline
 COMPONENTE CURRICULAR & Projeto Aplicado I \\
 \hline
- & \textbf{Grupo 9} \\
+\multirow[t]{4}{*}{GRUPO} & \textbf{Grupo 9} \\
  & Caio Felipe Correa (10764072) \\
-GRUPO & Jennifer Lins Baia da Silva (10756227) \\
+ & Jennifer Lins Baia da Silva (10756227) \\
  & Nilton Cesar Marques dos Santos (10733175) \\
 \end{tabular}\par}
 \vspace{-4pt}
@@ -124,7 +125,7 @@ O objetivo deste trabalho é elaborar uma análise exploratória dos preços de 
 
 Os dados são coletados pela Secretaria Municipal de Segurança Alimentar e Nutricional e disponibilizados pela Prefeitura de Curitiba por meio do programa Clique Economia (PREFEITURA..., [20--]). A base é atualizada periodicamente com novas coletas e identifica cada registro pelo nome da rede de supermercados e por um código de filial.
 
-A base cobre 100 nomes de rede distintos (depois reduzidos a 79, por correção de grafia), para 93 identificadores de empresa. Esses números, assim como as demais estatísticas detalhadas deste documento sobre as colunas originais, vêm da amostra de cerca de 10\% do conjunto completo usada na análise (seção 3.1): a maioria das empresas na amostra opera sob um único nome de rede (65,59\%), mas 30,11\% aparecem sob dois nomes e 4,30\% sob três, geralmente por filiais com grafias diferentes do mesmo identificador. Essa inconsistência de nomes molda boa parte das limitações descritas na seção 2.6.
+A base cobre 100 nomes de rede distintos, para 93 identificadores de empresa. Parte dessas diferenças é apenas erro de grafia ou codificação, não redes distintas; a normalização por similaridade, substring e revisão manual (seção 3.4, item 6.1 do notebook) encontrou 26 substituições de nome no conjunto completo. Essa inconsistência de nomes molda boa parte das limitações descritas na seção 2.6.
 
 \subsection{Problema do estudo}
 
@@ -198,7 +199,7 @@ Os eixos da Etapa 1 continuam, ampliados para cobrir os 13 itens da cesta básic
 
 \subsection{\textit{Pipeline} de dados}
 
-O arquivo completo é lido em blocos de 500 mil linhas, o que permite calcular as estatísticas de todos os registros sem carregá-lo inteiro na memória. As análises detalhadas das colunas originais usam uma amostra aleatória de cerca de 10\%, com semente fixa para que o resultado se repita; a análise da cesta básica, por usar poucos produtos, é recalculada sobre o conjunto completo (Figura~\ref{fig:pipeline}).
+O arquivo completo é lido em blocos de 500 mil linhas, o que permite calcular as estatísticas de todos os registros sem carregá-lo inteiro na memória. As análises detalhadas das colunas originais usam uma amostra aleatória de cerca de 22,7\%, com semente fixa para que o resultado se repita; a análise da cesta básica, por usar poucos produtos, é recalculada sobre o conjunto completo (Figura~\ref{fig:pipeline}).
 
 \begin{figure}[H]
 \caption{\textit{Pipeline} de dados da análise}
@@ -212,13 +213,13 @@ O arquivo completo é lido em blocos de 500 mil linhas, o que permite calcular a
 ]
 \node[etapa] (a) {1. Leitura do ZIP em blocos\\de 500 mil linhas};
 \node[etapa, below=of a] (b) {2. Perfil do conjunto completo\\(nulos, mín./máx., média, desvio)};
-\node[etapa, below=of b] (c) {3. Amostragem aleatória\\(cerca de 10\%, semente 42)};
+\node[etapa, below=of b] (c) {3. Amostragem aleatória\\(cerca de 22,7\%, semente 42)};
 \node[etapa, below=of c] (d) {4. Padronização de tipos\\(datas e identificadores)};
 \node[etapa, below=of d] (e) {5. Exploração de consistência\\(produto, categoria, rede, preços)};
 \node[etapa, right=1.3cm of a] (f) {6. Preço efetivo\\(prioridade entre os quatro preços)};
 \node[etapa, below=of f] (g) {7. Seleção dos 13 itens da cesta\\e corte a partir de abril/2023};
-\node[etapa, below=of g] (h) {8. Outliers pelo IQR\\(k=1,5, análise e remoção)};
-\node[etapa, below=of h] (i) {9. Preço por unidade de medida\\(kg, litro ou dúzia)};
+\node[etapa, below=of g] (h) {8. Preço por unidade de\\medida (kg, litro ou dúzia)};
+\node[etapa, below=of h] (i) {9. Outliers pelo desvio\\padrão sobre o preço unitário (k=3)};
 \node[etapa, below=of i] (j) {10. Recálculo sobre o dataset\\completo (etapas 6 a 9)};
 \node[etapa, below=of j] (k) {11. Custo da cesta: mensal,\\por rede e por contribuição};
 \node[futuro, below=of k] (l) {Etapa 3: \textit{storytelling}};
@@ -235,15 +236,15 @@ O arquivo completo é lido em blocos de 500 mil linhas, o que permite calcular a
 Além do que a Etapa 1 já apontava (só Curitiba e sem endereço dos estabelecimentos), a análise encontrou:
 
 \begin{enumerate}[label=\alph*), itemsep=0pt, topsep=2pt]
-  \item nomes de rede com variações de grafia e codificação (``Assai'' e ``Assaa''), sem identificador de rede para corrigi-los diretamente;
+  \item nomes de rede com variações de grafia e codificação, sem identificador de rede para corrigi-los diretamente;
   \item códigos de categoria sem descrição;
   \item \col{preco\_atacado\_qtd} igual a zero em todos os registros;
   \item poucos registros em 2019 e 2020 (menos de 2\% do total);
   \item até março de 2023, a pesquisa registrava produtos genéricos, sem marca nem tamanho de embalagem, o que limita a comparação de preço por unidade de medida a partir de abril de 2023;
-  \item a comparação entre redes, nos últimos 12 meses, cobre apenas as redes com pelo menos 20 registros de cada um dos 13 itens da cesta, cerca de 43\% das redes ativas no período (seção 5.4);
+  \item a comparação entre redes, nos últimos 12 meses, cobre apenas as redes com pelo menos 20 registros de cada um dos 13 itens da cesta, cerca de 64\% das redes ativas no período (seção 5.4);
   \item apesar de \col{id\_empresa} identificar a filial dentro de cada rede, a base não traz bairro, região ou endereço da unidade. Algumas redes têm nome de bairro no próprio nome (por exemplo, uma filial identificada pelo bairro em que está instalada), mas essa informação aparece em uma fração pequena e inconsistente das redes, insuficiente para sustentar uma análise de variação de custo por região; a comparação neste trabalho fica restrita à evolução histórica e à comparação entre redes;
   \item depois da seleção do subtipo exigido pela metodologia do DIEESE (seção 4.1), alguns itens ficam com poucos produtos distintos no conjunto completo, como batata e pão (1 produto cada) e banana e tomate (2 produtos cada). Essa cobertura baixa é inerente ao próprio item, não à metodologia: batata, tomate e banana são vegetais, legumes e frutas, vendidos sem marca, e o pão francês é fabricado na padaria do próprio mercado, também sem marca; diferente de itens industrializados como açúcar, arroz ou farinha, que têm várias marcas concorrentes no mercado;
-  \item como o pão francês não tem registros com tamanho de embalagem reconhecido entre abril e julho de 2023, o custo mensal da cesta nesses quatro meses é calculado com 12 dos 13 itens, o que subestima levemente o valor real nesse período (seção 5.2);
+  \item como o pão francês não tem registros com peso reconhecido entre abril e julho de 2023, o custo mensal da cesta nesses quatro meses é calculado com 12 dos 13 itens, o que subestima levemente o valor real nesse período (seção 5.2);
   \item na comparação de custo por rede, a mediana de cada item reúne todos os tipos e marcas vendidos naquela rede; parte da diferença de custo entre redes pode então vir do mix de produtos que cada uma vende, e não apenas do preço cobrado por um mesmo produto (seção 5.4).
 \end{enumerate}
 
@@ -251,11 +252,11 @@ Além do que a Etapa 1 já apontava (só Curitiba e sem endereço dos estabeleci
 
 \subsection{Procedimento}
 
-A análise foi feita em Python (pandas, NumPy, Matplotlib e seaborn), num notebook Jupyter. As Tabelas~\ref{tab:registros-ano} a \ref{tab:valores} usam o conjunto completo; as seções 3.2 a 3.6 usam a amostra de 999.992 registros (cerca de 10\% do total), que preserva a proporção de nulos (11,17\% em \col{id\_empresa}, contra 11,19\% no conjunto, e 1,69\% em \col{codigo\_categoria}, contra 1,70\%). As seções 4 e 5, sobre a cesta básica, recalculam essas mesmas etapas de forma independente sobre o conjunto completo, já que a seleção de poucos produtos torna a leitura completa viável em blocos.
+A análise foi feita em Python (pandas, NumPy, Matplotlib e seaborn), num notebook Jupyter. Exceto quando informado, as análises desta seção foram feitas com uma amostra de 999.992 registros (cerca de 22,7\% do total), que preserva a proporção de nulos (11,17\% em \col{id\_empresa}, contra 11,19\% no conjunto, e 1,69\% em \col{codigo\_categoria}, contra 1,70\%). As seções 4 e 5, sobre a cesta básica, recalculam essas mesmas etapas de forma independente sobre o conjunto completo, já que a seleção de poucos produtos torna a leitura completa viável em blocos.
 
 \subsection{Descrição das variáveis}
 
-As Tabelas~\ref{tab:registros-ano} a \ref{tab:valores} resumem as 11 colunas originais: distribuição no tempo, exemplares, ausentes, valores únicos, extremos e, para os campos de valor, média, variância e desvio. Os identificadores não têm média nem variância, porque a diferença entre dois códigos não representa uma grandeza.
+As Tabelas~\ref{tab:registros-ano} a \ref{tab:valores} usam o conjunto completo (exceção à amostra padrão desta seção) e resumem as 11 colunas originais: distribuição no tempo, exemplares, ausentes, valores únicos, extremos e, para os campos de valor, média, variância e desvio. Os identificadores não têm média nem variância, porque a diferença entre dois códigos não representa uma grandeza.
 
 \begin{table}[H]
 \caption{Registros por ano de coleta (conjunto completo)}
@@ -326,17 +327,17 @@ Total & 4.396.534 & 100,00 \\
 \end{table}
 
 \begin{description}[style=standard, leftmargin=0pt, itemsep=4pt, font=\normalfont\bfseries]
-\item[\col{data\_pesquisa}:] sem ausentes, cobre 2.751 dias. A distribuição é desigual: 2019 e 2020 somam 1,89\% dos registros, e 2023 a 2025 concentram 65,34\%. Os dois anos das pontas são parciais.
+\item[\col{data\_pesquisa}:] sem ausentes, cobre 2.751 dias no conjunto completo. A distribuição é desigual: 2019 e 2020 somam 1,89\% dos registros, e 2023 a 2025 concentram 65,34\%. Os dois anos das pontas são parciais.
 \item[\col{id\_empresa}:] a coluna com mais ausentes (11,19\%), com 93 códigos de 0 a 175. Não identifica a filial sozinha: na amostra, 34,41\% dos códigos aparecem em mais de uma rede (o código 6, por exemplo, em Condor e Stall). A filial é o par \col{id\_empresa} e \col{rede}. Os nulos foram mantidos, porque nenhuma análise depende de filial.
-\item[\col{rede}:] sem ausentes, com 100 nomes. Parte são variações de grafia ou codificação da mesma rede (``Assai'' e ``Assaa'', ``Araucaria'' e ``Arauca!ria''), mantidas por falta de um identificador de rede (Figura~\ref{fig:redes}).
+\item[\col{rede}:] sem ausentes, com 100 nomes. Parte são variações de grafia ou codificação da mesma rede, sem um identificador único que permita corrigi-las diretamente; a normalização desses nomes é feita à parte, no campo \col{rede\_normalizada} (seção 3.4, Figura~\ref{fig:redes}).
 \item[\col{codigo\_categoria}:] 1,70\% de ausentes e 10 códigos, de 0 a 9. É estável por produto (97,05\% dos produtos da amostra têm um único código), mas não há dicionário que diga o que cada código significa, o que limita o uso.
 \item[\col{id\_produto}:] sem ausentes, com 2.270 códigos. É mais confiável que a descrição: na amostra, 17,36\% dos produtos têm de duas a cinco descrições diferentes, geralmente por erro de digitação.
 \item[\col{descricao}:] sem ausentes, com 2.771 textos, 501 a mais que o número de produtos, por variações de espaço, abreviação e codificação (``Acucar cristal'' e ``Aaacar cristal''). Segue o padrão nome, marca e tamanho, e foi a base para selecionar os itens da cesta básica.
-\item[\col{preco\_regular}:] média de R\$ 10,55, desvio de R\$ 10,84 e máximo de R\$ 549,90. É o único preço em 97,02\% da amostra. O zero aparece quando o item só tem outro tipo de preço, como promoção (1,53\%).
+\item[\col{preco\_regular}:] média de R\$ 10,55, desvio de R\$ 10,84 e máximo de R\$ 549,90. É o único preço em 97,04\% da amostra. O zero aparece quando o item só tem outro tipo de preço, como promoção (1,53\%).
 \item[\col{preco\_atacado}:] presente em 0,94\% da amostra; o zero indica que não há preço de atacado. Concentra-se em atacarejos, como a Jumbo atacadista (31,55\% dos registros da rede).
 \item[\col{preco\_atacado\_qtd}:] zero em todos os registros. Sem variação, foi excluído das análises.
-\item[\col{preco\_promocao}:] o preço especial mais comum, em 1,74\% da amostra, de 7,48\% dos registros na Zimmer supermercado a 2,79\% no Condor, entre as dez redes com maior proporção.
-\item[\col{preco\_fidelidade}:] presente em 0,34\% da amostra, concentrado nas variações de nome da rede Condor (1,23\% a 7,72\% dos registros, segundo a variante do nome).
+\item[\col{preco\_promocao}:] o preço especial mais comum, em 1,74\% da amostra, de 7,48\% dos registros na Zimmer supermercado a 2,77\% no Condor, entre as dez redes com maior proporção.
+\item[\col{preco\_fidelidade}:] presente em 0,34\% da amostra, de 0,30\% dos registros na Assai e na Jacomar a 1,34\% no Condor, entre as dez redes com maior proporção.
 \end{description}
 
 \subsection{Valores ausentes}
@@ -363,22 +364,24 @@ sim & -- & sim & -- & 1.624 & 0,16 \\
 \nota{``sim'' indica preço maior que zero; entre as demais combinações, 15 registros não têm nenhum preço.}
 \end{table}
 
-Como 15.254 registros têm promoção sem preço regular, o grupo criou a coluna \col{preco\_efetivo}, que usa o primeiro preço disponível na ordem promoção, regular, fidelidade e atacado. A promoção vem primeiro porque é o que qualquer cliente paga durante a oferta; fidelidade e atacado ficam por último porque exigem cadastro ou compra em quantidade. Os 15 registros sem nenhum preço foram removidos na análise da cesta básica (seção 4.2).
+Como 15.254 registros têm promoção sem preço regular, o grupo criou a coluna \col{preco\_efetivo}, que usa o primeiro preço disponível na ordem promoção, regular, fidelidade e atacado. A promoção vem primeiro porque é o que qualquer cliente paga durante a oferta; fidelidade e atacado ficam por último porque exigem cadastro ou compra em quantidade. Os 15 registros sem nenhum preço na amostra foram mantidos nesta exploração; no conjunto completo, os 33 registros equivalentes são removidos na análise da cesta básica (seção 4.1), onde o preço é usado diretamente no cálculo de custo.
 
 \subsection{Normalização da rede}
 
-Antes de calcular preços, o nome da rede precisou ser normalizado: a amostra tinha 100 nomes distintos para 93 identificadores de empresa, e boa parte das diferenças eram apenas erro de grafia ou codificação, não redes distintas. A correção comparou cada par de nomes por similaridade textual (limiar de 85\%) e por relação de substring (um nome contido no outro), com duas excepções mantidas por serem redes de fato diferentes: ``Tok Super''/``Top Super'' e ``Supermercado Curitiba''/``Supermercado Italia''. O nome com mais registros foi escolhido como canônico. Essa correção reduziu a amostra de 100 para 79 redes distintas, e o mesmo procedimento, aplicado ao conjunto completo (seção 4.1), encontrou 20 substituições.
+Antes de calcular preços, o nome da rede precisou ser normalizado: a amostra tinha 99 nomes distintos para 93 identificadores de empresa, e boa parte das diferenças eram apenas erro de grafia ou codificação, não redes distintas. A correção comparou cada par de nomes por similaridade textual (limiar de 85\%) e por relação de substring (um nome contido no outro), com duas excepções mantidas após análise visual, por serem redes de fato diferentes. O nome com mais registros foi escolhido como canônico. A quantidade pequena de redes (100 no conjunto completo) permitiu revisar manualmente a lista completa depois da normalização automática e encontrar seis pares adicionais de erro de digitação que o algoritmo não capturou, por serem nomes curtos em que a troca de 1 ou 2 caracteres pesa mais na métrica de similaridade; essa revisão manual não seria viável em um dataset com uma quantidade de redes muito maior. Essa correção reduziu a amostra de 99 para 73 redes distintas, e o mesmo procedimento, aplicado ao conjunto completo (seção 4.1), encontrou 26 substituições.
 
 \subsection{Outliers}
 
-Preços que fogem muito do padrão de um item podem ser erro de captura ou condição de venda pontual, como atacado ou promoção não identificada como tal. O cálculo do limite não pode misturar os 13 itens da cesta básica numa única distribuição: carne e açúcar têm faixas de preço tão diferentes que um limite único seria dominado pelos itens mais caros. Por isso, o IQR e o desvio padrão foram calculados item a item, cada um com seu próprio limite inferior e superior.
+Preços que fogem muito do padrão de um item podem ser erro de captura ou condição de venda pontual, como atacado ou promoção não identificada como tal. O cálculo do limite não pode misturar os 13 itens da cesta básica numa única distribuição: carne e açúcar têm faixas de preço tão diferentes que um limite único seria dominado pelos itens mais caros. Por isso, o desvio padrão (multiplicador 3) foi calculado item a item, cada um com seu próprio limite inferior e superior.
 
-Os dois critérios discordam bastante em alguns itens. O pão é o caso mais claro: pelo IQR (multiplicador 1,5), 18,97\% dos registros de pão ficam fora da faixa, porque o item ainda mistura pão vendido a granel com pão embalado, duas formas de venda com preço por unidade bem diferente; pelo desvio padrão (multiplicador 3), essa mesma mistura quase não aparece (0,06\%), porque a cauda de preços altos já desloca a média e o desvio o suficiente para absorver boa parte da variação. A carne mostra o problema oposto: os valores de R\$ 82,90 e R\$ 79,98 (coxão mole) no extremo alto, e R\$ 18,83, R\$ 18,67 e R\$ 17,99 (patinho e posta vermelha) no extremo baixo, são capturados pelos dois métodos, o que reforça que não são preços legítimos de corte nobre nem de condição especial de venda, e sim erro de captura.
+O cálculo usa o preço por unidade de medida (R\$ por quilo, litro ou dúzia, calculado dividindo o preço do pacote pelo tamanho da embalagem), não o preço do pacote em si. Arroz, açúcar e farinha são os três itens com mais de um tamanho de embalagem na cesta (1 kg, 2 kg e 5 kg); um pacote de 5 kg custa naturalmente bem mais que um de 1 kg do mesmo produto, sem isso ser um preço anômalo. Calcular o desvio padrão sobre o preço do pacote misturaria essa diferença de tamanho com a dispersão real de preço, inflando o desvio desses três itens o suficiente para que nenhum registro fosse identificado como outlier.
 
-Por reagir menos a esses extremos isolados, o IQR foi o critério usado para remover os registros considerados outliers; o desvio padrão fica como comparação, não como critério de corte. A remoção retirou 946 dos 107.907 registros da cesta básica na amostra (0,88\%), restando 106.961 registros (Tabela~\ref{tab:outliers-item}).
+O objetivo desta etapa é remover valores que são, com relativa confiança, erro de preenchimento, não qualquer registro estatisticamente afastado da maioria. A carne ilustra o caso em que o critério funciona bem: os valores de R\$ 82,90 e R\$ 79,98 (coxão mole) no extremo alto, e R\$ 18,83, R\$ 18,67 e R\$ 17,99 (patinho e posta vermelha) no extremo baixo, ficam fora da faixa, e provavelmente não são preços legítimos nem de condição especial de venda, e sim erro de captura.
+
+A remoção retirou 428 dos 107.907 registros da cesta básica na amostra (0,40\%), restando 107.479 registros (Tabela~\ref{tab:outliers-item}).
 
 \begin{table}[H]
-\caption{Outliers por item segundo o IQR (k=1,5), amostra}
+\caption{Outliers por item segundo o desvio padrão sobre o preço por unidade (k=3), amostra}
 \label{tab:outliers-item}
 \small
 \centering
@@ -386,39 +389,37 @@ Por reagir menos a esses extremos isolados, o IQR foi o critério usado para rem
 \toprule
 \textbf{Item} & \textbf{Registros} & \textbf{Outliers} & \textbf{\%} \\
 \midrule
-Pão & 1.566 & 297 & 18,97 \\
-Carne & 5.283 & 171 & 3,24 \\
-Leite & 11.554 & 242 & 2,09 \\
-Tomate & 3.352 & 60 & 1,79 \\
-Manteiga & 6.364 & 93 & 1,46 \\
-Batata & 2.078 & 23 & 1,11 \\
-Banana & 4.095 & 24 & 0,59 \\
+Carne & 5.283 & 109 & 2,06 \\
+Tomate & 3.352 & 31 & 0,92 \\
+Farinha & 15.720 & 129 & 0,82 \\
+Batata & 2.078 & 15 & 0,72 \\
+Leite & 11.554 & 73 & 0,63 \\
+Manteiga & 6.364 & 26 & 0,41 \\
 Feijão & 8.340 & 21 & 0,25 \\
-Óleo & 6.838 & 12 & 0,18 \\
+Banana & 4.095 & 7 & 0,17 \\
+Óleo & 6.838 & 5 & 0,07 \\
+Pão & 1.566 & 1 & 0,06 \\
+Açúcar & 11.268 & 3 & 0,03 \\
+Arroz & 16.898 & 5 & 0,03 \\
 Café & 14.551 & 3 & 0,02 \\
-Açúcar & 11.268 & 0 & 0,00 \\
-Arroz & 16.898 & 0 & 0,00 \\
-Farinha & 15.720 & 0 & 0,00 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-A seção 4 da análise, dedicada aos 13 itens da cesta básica, usa o mesmo critério (IQR por item, multiplicador 1,5, valor de referência das disciplinas Análise Exploratória e Analytics do curso) para remover outliers sobre o conjunto completo.
-
 \subsection{Distribuição por item da cesta básica}
 
-A seleção dos 13 itens da cesta básica (seção 4) seguiu a metodologia da Cesta Básica de Alimentos do DIEESE (DIEESE, 2025a), que define 13 subtipos de produto a pesquisar nas capitais brasileiras. Os itens são: carne bovina (coxão mole, patinho ou posta vermelha), leite (integral, não em pó), feijão preto, arroz branco, farinha de trigo comum, batata comum, tomate comum, pão francês, café em pó, banana (nanica ou prata), açúcar branco refinado, óleo de soja e manteiga.
+A seleção dos 13 itens da cesta básica (seção 4) seguiu a metodologia da Cesta Básica de Alimentos do DIEESE (DIEESE, 2025a), que define 13 subtipos de produto a pesquisar nas capitais brasileiras. Os itens são: carne bovina (coxão mole, patinho ou posta vermelha), leite integral, feijão preto, arroz branco, farinha de trigo, batata, tomate, pão francês, café em pó, banana (nanica, caturra ou prata), açúcar branco refinado, óleo de soja e manteiga.
 
-A mediana de preço varia bastante entre os itens: de cerca de 5 reais em batata, banana e leite até mais de 40 reais em carne, quase 9 vezes mais caro que o item mais barato da cesta. Arroz e açúcar também têm dispersão alta (desvio padrão acima de 8), puxada por diferenças de embalagem e marca que a seleção pelo subtipo da metodologia não elimina completamente. Leite e óleo, por sua vez, têm distribuição mais concentrada (desvio padrão abaixo de 1,1), coerente com produtos mais padronizados entre redes e marcas. Em praticamente todos os itens, o bigode superior do boxplot é mais longo que o inferior, uma assimetria à direita: a maior parte dos registros de um item fica concentrada nos preços mais baixos, com uma cauda de preços mais altos puxando a distribuição (Figura~\ref{fig:distribuicao-item}).
+A mediana de preço por unidade de medida varia bastante entre os itens: de cerca de 4 reais em farinha e açúcar até quase 43 reais em carne, mais de 10 vezes o item mais barato da cesta. Café e manteiga também têm dispersão alta (desvio padrão acima de 7), puxada pelo próprio valor absoluto do quilo desses itens, mais caro e com faixa de preço mais larga entre marcas e redes. Açúcar e farinha, por sua vez, têm distribuição mais concentrada (desvio padrão abaixo de 0,9), coerente com produtos mais padronizados entre redes e marcas. Em praticamente todos os itens, o bigode superior do boxplot é mais longo que o inferior, uma assimetria à direita: a maior parte dos registros de um item fica concentrada nos preços mais baixos, com uma cauda de preços mais altos puxando a distribuição (Figura~\ref{fig:distribuicao-item}).
 
 \begin{figure}[H]
-\caption{Distribuição do preço efetivo por item da cesta básica (amostra)}
+\caption{Distribuição do preço por unidade de medida por item da cesta básica (amostra)}
 \label{fig:distribuicao-item}
 \centering
 \includegraphics[width=\textwidth]{distribuicao_preco_por_item.png}
 \end{figure}
 
-A cobertura da pesquisa também é desigual entre redes: Condor, Jacomar e Atacadão lideram em número de registros na cesta (Figura~\ref{fig:redes}).
+A cobertura da pesquisa também é desigual entre redes: Condor, Jacomar e Atacadão lideram em número de registros na cesta (Figura~\ref{fig:redes}), o que pode ser indicativo de um maior número de lojas dessas redes em Curitiba, de uma variedade maior de produtos vendidos, ou de ambos.
 
 \begin{figure}[H]
 \caption{Redes com mais registros na cesta básica (amostra)}
@@ -436,7 +437,7 @@ Só arroz, açúcar e farinha têm mais de um tamanho de embalagem na cesta (os 
 \includegraphics[width=\textwidth]{preco_por_unidade_embalagem.png}
 \end{figure}
 
-\section{Cesta básica: preparação, outliers e preço por unidade de medida}
+\section{Cesta básica: preparação, preço por unidade de medida e outliers}
 
 \subsection{Seleção dos itens no conjunto completo}
 
@@ -449,22 +450,22 @@ A seção 6 do notebook, correspondente a esta seção do documento, repete sobr
   \item \textbf{Remoção dos registros sem nenhum preço preenchido}: na exploração da amostra (seção 3.3) esses registros foram mantidos, mas, como não é possível calcular custo sem preço, a análise da cesta básica os remove.
   \item \textbf{Seleção dos 13 itens e do subtipo exigido pela metodologia do DIEESE, decidida por \col{id\_produto}}: os produtos no dataset têm diversas variedades (por exemplo, carne com corte comum ou nobre), mas a metodologia da Cesta Básica de Alimentos especifica qual variedade de cada item compõe a cesta oficial (seção 3.6); decidir por \col{id\_produto}, e não por linha, evita que um erro de digitação exclua parte dos registros de um produto já incluído.
   \item \textbf{Correção dos três erros de digitação no fracionamento} (seção 4.2) e \textbf{corte a partir de abril de 2023} (seção 4.2): necessários para que o tamanho de embalagem exista e seja interpretado corretamente em todos os registros usados.
-  \item \textbf{Remoção de outliers por IQR (k=1,5)}: mesmo critério e mesma justificativa da seção 3.5, aplicado por item para não misturar a faixa de preço de produtos diferentes.
+  \item \textbf{Remoção de outliers por desvio padrão sobre o preço por unidade de medida (k=3)}: mesmo critério e mesma justificativa da seção 3.5, aplicado por item para não misturar a faixa de preço de produtos diferentes, nem a faixa de preço de pacotes de tamanhos diferentes do mesmo item.
 \end{itemize}
 
-Nenhuma regra nova entra nesta etapa: o objetivo é aplicar, ao conjunto completo, o que já foi validado na amostra. A seleção inicial dos 13 itens no conjunto completo resulta em 463 produtos e 1.267.450 registros; depois da exigência de preço válido e do corte de data (seção 4.2), restam 1.030.412 registros; depois da seleção do subtipo específico de cada item e da extração do tamanho de embalagem, restam 474.180 registros em 13 produtos-tipo; a remoção de outliers por IQR deixa 470.333 registros.
+Nenhuma regra nova entra nesta etapa: o objetivo é aplicar, ao conjunto completo, o que já foi validado na amostra. A seleção inicial dos 13 itens no conjunto completo resulta em 463 produtos e 1.267.450 registros; depois da exigência de preço válido e do corte de data (seção 4.2), restam 1.030.412 registros; depois da seleção do subtipo específico de cada item e da extração do tamanho de embalagem, restam 474.180 registros em 13 produtos-tipo; a remoção de outliers por desvio padrão deixa 472.318 registros.
 
 \subsection{Corte de data e extração do tamanho da embalagem}
 
 Até março de 2023, a pesquisa registrava os itens de forma genérica, sem marca nem tamanho de embalagem (por exemplo, ``Arroz polido''). A partir de abril de 2023, os registros passaram a trazer essa informação no final da descrição, separada por um hífen. Sem o tamanho, \col{qtd\_fracionamento} fica vazio e o preço por quilo não pode ser calculado nem comparado dentro do mesmo grupo de embalagem; por isso a cesta básica usa somente registros a partir de abril de 2023.
 
-A extração do tamanho exigiu corrigir três padrões de erro de preenchimento encontrados nos dados: ``1 gr''/``1 ml'' tratados como ``1 kg''/``1 litro'', porque nenhum item da cesta é vendido em pacote de 1 grama ou mililitro; ``5 gr'' em farinha tratado como ``5 kg'', porque a farinha não é vendida em pacote de 5 gramas; e ``- -kg'' sem número (hífen duplicado por falha de formatação, caso do pão francês vendido a granel), tratado como ``1 kg''.
+A extração do tamanho exigiu corrigir três padrões de erro de preenchimento encontrados nos dados: ``1 gr''/``1 ml''/``5 gr'' tratados como ``1 kg''/``1 litro''/``5 kg'', porque nenhum item da cesta é vendido em pacote de 1 grama, 1 mililitro ou 5 gramas; e ``- -kg'' sem número (hífen duplicado por falha de formatação, caso do pão francês vendido a granel), tratado como ``1 kg''.
 
 \subsection{Preço por unidade de medida}
 
-O \col{qtd\_fracionamento} (em g ou ml) é convertido para a unidade de medida que a metodologia do DIEESE usa em cada item: quilograma para a maioria, litro para leite e óleo. A metodologia (DIEESE, 2025a) trata a banana como um caso especial: para supermercados, sacolões e hortifrútis, onde o preço é coletado por quilo, a metodologia multiplica esse preço por 1,2 (prata) ou 1,8 (nanica/caturra); já nas feiras, o preço já é coletado por dúzia e não recebe esse multiplicador. Esses dois valores, 1,2 kg e 1,8 kg, correspondem ao peso aproximado de uma dúzia de cada variedade, de modo que o resultado da multiplicação é o preço por dúzia, não por banana individual. Com o preço mediano real de R\$ 4,99 a R\$ 5,99 por quilo (prata/caturra), o multiplicador resulta em algo entre R\$ 6 e R\$ 11 por dúzia, valor plausível para o item; interpretado como preço por banana individual, passaria de R\$ 10 por uma única fruta, o que não é.
+O \col{qtd\_fracionamento} (em g ou ml) é convertido para a unidade de medida que a maioria dos itens usa: quilograma, com litro para leite e óleo, e a metodologia do DIEESE (DIEESE, 2025a) trata a banana como um caso especial: para supermercados, sacolões e hortifrútis, onde o preço é coletado por quilo, a metodologia determina multiplicar esse preço por 1,2 (prata) ou 1,8 (nanica/caturra) para obter o preço por dúzia.
 
-Com o preço convertido para a unidade correta, a série mensal de cada item mostra evoluções bem diferentes entre si: o café, por exemplo, mais que dobrou de preço entre abril de 2023 e o pico em junho de 2025, enquanto a farinha teve variação muito menor no mesmo período (Figuras~\ref{fig:unidade-1} a \ref{fig:unidade-7}).
+Com o preço convertido para a unidade correta, a série mensal de cada item mostra evoluções bem diferentes entre si: o café, por exemplo, mais que dobrou de preço entre abril de 2023 e o pico em junho de 2025; a carne subiu de forma mais gradual, mas constante, no mesmo período; já o arroz, depois de subir até um pico em 2024, voltou ao patamar de abril de 2023 (Figuras~\ref{fig:unidade-1} a \ref{fig:unidade-7}).
 
 \begin{figure}[H]
 \caption{Preço por unidade de medida ao longo do tempo (1/7)}
@@ -549,9 +550,9 @@ Manteiga & 0,75 kg \\
 
 \subsection{Custo mensal}
 
-O pão francês não tem nenhum registro com tamanho de embalagem reconhecido entre abril e julho de 2023, por isso o custo mensal da cesta nesses quatro meses é calculado com no mínimo 12 dos 13 itens disponíveis, o que subestima levemente o valor real nesse período. A partir de agosto de 2023, todos os 13 itens estão disponíveis todos os meses.
+O pão francês não tem nenhum registro com peso reconhecido entre abril e julho de 2023, por isso o custo mensal da cesta nesses quatro meses é calculado com no mínimo 12 dos 13 itens disponíveis, o que subestima levemente o valor real nesse período. A partir de agosto de 2023, todos os 13 itens estão disponíveis todos os meses.
 
-O custo da cesta sai de R\$ 568,35 em abril de 2023, sobe até um pico de R\$ 761,92 em junho de 2026 e fecha a série em R\$ 747,29 em setembro de 2026 (Figura~\ref{fig:custo-mensal}).
+O custo da cesta sai de R\$ 568,35 em abril de 2023, sobe até um pico de R\$ 763,54 em junho de 2026 e fecha a série em R\$ 750,71 em setembro de 2026 (Figura~\ref{fig:custo-mensal}).
 
 \begin{figure}[H]
 \caption{Custo mensal da cesta básica em Curitiba}
@@ -564,7 +565,7 @@ O custo da cesta sai de R\$ 568,35 em abril de 2023, sobe até um pico de R\$ 76
 
 Como o custo da cesta é a soma de \col{preco\_unitario} multiplicado pela quantidade de cada item, a contribuição de cada item para a variação do custo em um período é exatamente essa multiplicação, aplicada à diferença de preço entre o início e o fim do período. Essa decomposição foi escolhida em vez de uma correlação entre os preços e o custo total, porque os itens são literalmente parcelas da soma que forma o custo, o que distorceria qualquer coeficiente de correlação calculado diretamente.
 
-Entre agosto de 2023 (primeiro mês com os 13 itens disponíveis) e setembro de 2026, carne foi, isoladamente, o item que mais empurrou o custo da cesta para cima, seguido por tomate, café e pão, com contribuições parecidas entre si. Manteiga foi o item com maior contribuição negativa no período, seguida de açúcar e feijão, com contribuições negativas bem menores (Figura~\ref{fig:contribuicao}).
+Entre agosto de 2023 (primeiro mês com os 13 itens disponíveis) e setembro de 2026, carne foi, isoladamente, o item que mais empurrou o custo da cesta para cima, seguido por batata, café e pão, com contribuições parecidas entre si. Manteiga foi o item com maior contribuição negativa no período, seguida de feijão e açúcar, com contribuições negativas bem menores (Figura~\ref{fig:contribuicao}).
 
 \begin{figure}[H]
 \caption{Contribuição de cada item para a variação do custo da cesta (agosto/2023 a setembro/2026)}
@@ -575,9 +576,9 @@ Entre agosto de 2023 (primeiro mês com os 13 itens disponíveis) e setembro de 
 
 \subsection{Custo da cesta por rede}
 
-A comparação do custo da cesta entre redes, nos últimos 12 meses da série, exige que a rede tenha pelo menos 20 registros de cada um dos 13 itens, para que a mediana de preço de cada item não fique instável com poucos pontos. Esse critério deixa de fora as redes de menor volume na pesquisa, que não necessariamente têm o mesmo perfil de preço das redes maiores: das 47 redes normalizadas ativas no período, 20 (42,6\%) atendem ao critério.
+A comparação do custo da cesta entre redes, nos últimos 12 meses da série, exige que a rede tenha pelo menos 20 registros de cada um dos 13 itens, para que a mediana de preço de cada item não fique instável com poucos pontos. Esse critério deixa de fora as redes de menor volume na pesquisa, que não necessariamente têm o mesmo perfil de preço das redes maiores: das 45 redes normalizadas ativas no período, 29 (64,4\%) atendem ao critério.
 
-Entre essas 20 redes, a cesta custou de R\$ 666,68 na Super Boni a R\$ 776,47 na Rede Master, uma diferença de 16,5\% (Figura~\ref{fig:custo-rede}).
+Entre essas 29 redes, a cesta custou de R\$ 668,47 na Assai a R\$ 905,13 na Festval, uma diferença de 35,4\% (Figura~\ref{fig:custo-rede}).
 
 \begin{figure}[H]
 \caption{Custo da cesta por rede, últimos 12 meses da série (redes elegíveis)}
@@ -587,6 +588,15 @@ Entre essas 20 redes, a cesta custou de R\$ 666,68 na Super Boni a R\$ 776,47 na
 \end{figure}
 
 Como a mediana de cada item reúne todos os tipos e marcas vendidos na rede, parte da diferença entre redes pode vir do mix de produtos que cada uma vende, e não só do preço cobrado pelo mesmo produto.
+
+Decompondo a comparação por item (Figura~\ref{fig:festval-comparacao}: preço mediano de cada item na Festval contra a mediana das demais redes elegíveis, nos mesmos últimos 12 meses), fica claro que a Festval tem o custo mais caro de cesta básica, e o motivo é que ela cobra mais que a mediana das demais redes em 12 dos 13 itens (a exceção é feijão, com preço praticamente igual à mediana). A diferença é maior, proporcionalmente, em banana (R\$ 11,99 contra R\$ 7,37, 63\% mais caro) e batata (R\$ 5,99 contra R\$ 3,99, 50\% mais caro); em valor absoluto, carne pesa mais (R\$ 59,98 contra R\$ 46,98, 28\% mais caro), por ser o item de maior quantidade mensal na cesta (6,6 kg).
+
+\begin{figure}[H]
+\caption{Preço por item: Festval contra a mediana das demais redes elegíveis}
+\label{fig:festval-comparacao}
+\centering
+\includegraphics[width=\textwidth]{cesta_festval_comparacao_item.png}
+\end{figure}
 
 \subsection{Evolução do custo nas redes com mais registros}
 
@@ -599,11 +609,13 @@ Diferente da comparação da seção 5.4, que usa só os últimos 12 meses e exi
 \includegraphics[width=\textwidth]{cesta_custo_top5_redes.png}
 \end{figure}
 
+A Festval se mantém acima das demais redes ao longo de toda a série, não só nos últimos 12 meses analisados na seção 5.4, enquanto o Atacadão é consistentemente a mais barata das cinco. Condor, Jacomar e Super Muffato oscilam próximas entre si, sem uma ordem fixa de quem é mais cara em cada mês.
+
 \section{Considerações finais}
 
 A base é grande e quase completa: só duas colunas têm ausentes, e nenhuma é central para o estudo. Os cuidados estão em outros pontos: preços sobrepostos, resolvidos com o preço efetivo; identificador de filial que não é único; nomes de rede inconsistentes; alguns preços impossíveis, já removidos; a troca de formato de descrição em março de 2023, que deixa a comparação por unidade de medida possível só a partir de abril daquele ano; e a cobertura desigual entre redes, que limita a comparação de custo por rede a uma fração delas.
 
-Com os 13 itens da cesta básica padronizados pela metodologia do DIEESE, o custo da cesta em Curitiba teve pico de R\$ 761,92 em junho de 2026 e fechou setembro de 2026 em R\$ 747,29. Nos últimos 12 meses, entre as redes com volume suficiente para comparação, a mesma cesta custou de R\$ 666,68 a R\$ 776,47, uma diferença de 16,5\% que o consumidor não vê na consulta diária do Clique Economia. Carne foi, isoladamente, o item que mais pressionou essa alta no período completo da série, seguida por tomate, café e pão; manteiga foi o item que mais ajudou a conter o custo.
+Com os 13 itens da cesta básica padronizados pela metodologia do DIEESE, o custo da cesta em Curitiba teve pico de R\$ 763,54 em junho de 2026 e fechou setembro de 2026 em R\$ 750,71. Nos últimos 12 meses, entre as redes com volume suficiente para comparação, a mesma cesta custou de R\$ 668,47 (Assai) a R\$ 905,13 (Festval), uma diferença de 35,4\% que o consumidor não vê na consulta diária do Clique Economia; olhando a série histórica completa, mas restrita às cinco redes com mais registros, a Festval se mantém consistentemente a mais cara, e o Atacadão a mais barata. Carne foi, isoladamente, o item que mais pressionou essa alta no período completo da série, seguida por batata, café e pão; manteiga foi o item que mais ajudou a conter o custo.
 
 % =====================================================================
 % POS-TEXTUAIS
@@ -631,7 +643,7 @@ PREFEITURA de Curitiba. \textit{Clique Economia}. Curitiba, [20--]. Disponível 
 
 \begin{description}[style=standard, leftmargin=0pt, itemsep=3pt, font=\normalfont\bfseries]
 \item[AED:] Análise exploratória de dados.
-\item[Amostra:] Subconjunto de registros sorteado do conjunto completo. Aqui, cerca de 10\% dos registros, sorteados com semente fixa para que o resultado se repita.
+\item[Amostra:] Subconjunto de registros sorteado do conjunto completo. Aqui, cerca de 22,7\% dos registros, sorteados com semente fixa para que o resultado se repita.
 \item[Assimetria à direita:] Distribuição em que poucos valores muito altos puxam a média para cima, deixando-a acima da mediana.
 \item[Bloco (\textit{chunk}):] Parte do arquivo lida de cada vez, usada para processar o conjunto inteiro sem carregá-lo todo na memória.
 \item[Cesta básica:] Conjunto padrão de alimentos usado como referência para medir o custo da alimentação de uma família.
@@ -640,8 +652,6 @@ PREFEITURA de Curitiba. \textit{Clique Economia}. Curitiba, [20--]. Disponível 
 \item[Decreto-Lei n\textsuperscript{o} 399/1938:] Norma federal que define a composição e as quantidades mensais da cesta básica de alimentos por região do país, usada como referência pela metodologia do DIEESE.
 \item[DIEESE:] Departamento Intersindical de Estatística e Estudos Socioeconômicos, responsável pela Pesquisa Nacional da Cesta Básica de Alimentos.
 \item[EAN-13:] Padrão de código de barras de 13 dígitos usado para identificar produtos no varejo.
-\item[Intervalo interquartil:] Diferença entre o terceiro e o primeiro quartil. Concentra a metade central dos dados e é a base do critério de outliers usado neste trabalho.
-\item[IQR:] Intervalo interquartil (\textit{interquartile range}).
 \item[LGPD:] Lei Geral de Proteção de Dados Pessoais.
 \item[Notebook Jupyter:] Arquivo que combina código, resultados e texto explicativo, executado célula a célula.
 \item[ODS:] Objetivos de Desenvolvimento Sustentável, da ONU.
@@ -649,7 +659,6 @@ PREFEITURA de Curitiba. \textit{Clique Economia}. Curitiba, [20--]. Disponível 
 \item[\textit{Pipeline} de dados:] Sequência de etapas pela qual os dados passam, da leitura até o resultado final.
 \item[Preço efetivo:] Coluna criada pelo grupo com um único preço por registro, escolhido entre promoção, regular, fidelidade e atacado, nessa ordem.
 \item[Preço por unidade de medida:] Preço efetivo dividido pelo tamanho da embalagem, convertido para quilograma, litro ou dúzia, conforme o item.
-\item[Quartil:] Separatriz que divide os dados ordenados em 4 partes iguais. $Q_1$ marca os 25\% menores valores e $Q_3$ os 75\% menores.
 \item[Rede:] Empresa de supermercados que pode ter várias lojas (filiais).
 \item[Rede normalizada:] Nome da rede corrigido para eliminar variações de grafia e duplicidade do mesmo nome.
 \item[Série temporal:] Sequência de valores medidos em intervalos regulares de tempo, como a mediana mensal de um preço.

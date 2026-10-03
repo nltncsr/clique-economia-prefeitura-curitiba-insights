@@ -33,6 +33,7 @@
 \usepackage{etoolbox}
 \usepackage{xcolor}
 \definecolor{mackred}{RGB}{204,32,39}
+\definecolor{darkblue}{RGB}{0,0,139}
 \usepackage{tikz}
 \usetikzlibrary{positioning, arrows.meta}
 \usepackage[hidelinks]{hyperref}
@@ -65,7 +66,7 @@
 \fancyfoot[C]{\small\thepage}
 \renewcommand{\headrulewidth}{0pt}
 \fancypagestyle{plain}{\fancyhf{}\fancyhead[C]{\includegraphics[height=1.3cm]{logo_ead_mackenzie.png}}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{0pt}}
-\fancypagestyle{capa}{\fancyhf{}\fancyhead[C]{\includegraphics[height=1.3cm]{logo_ead_mackenzie.png}}\renewcommand{\headrulewidth}{0pt}}
+\fancypagestyle{capa}{\fancyhf{}\fancyhead[C]{\includegraphics[height=1.3cm]{logo_ead_mackenzie.png}}\fancyfoot[C]{\small Github: \href{https://github.com/nltncsr/clique-economia-prefeitura-curitiba-insights}{\textcolor{darkblue}{\underline{https://github.com/nltncsr/clique-economia-prefeitura-curitiba-insights}}}}\renewcommand{\headrulewidth}{0pt}}
 
 \addto\captionsbrazil{%
   \renewcommand{\contentsname}{Sumário}%
@@ -80,32 +81,24 @@
 % CAPA (mesmo modelo da Etapa 1)
 % =====================================================================
 \thispagestyle{capa}
-\begin{center}
-{\Large\color{gray!80!black} Etapa II}
-\end{center}
 \vspace{4pt}
-{\setstretch{1.4}
-\begin{tabular}{@{}>{\raggedleft\arraybackslash\color{gray!80!black}}p{5.6cm}|p{9.6cm}@{}}
+\begin{tabular}{@{}>{\raggedleft\arraybackslash\color{gray!80!black}}b{5.6cm}|b{9.6cm}@{}}
 \hline
-COMPONENTE CURRICULAR & Projeto Aplicado I \\
+\rule{0pt}{3.2ex}\\[-0.5ex]
+COMPONENTE CURRICULAR & Projeto Aplicado I \\[3.2ex]
 \hline
-\multirow[t]{4}{*}{GRUPO} & \textbf{Grupo 9} \\
- & Caio Felipe Correa (10764072) \\
- & Jennifer Lins Baia da Silva (10756227) \\
- & Nilton Cesar Marques dos Santos (10733175) \\
-\end{tabular}\par}
+$\vcenter{\hbox{\makebox[5.6cm][r]{GRUPO}}}$ & $\vcenter{\hbox{\begin{tabular}[b]{@{}l@{}}\textbf{Grupo 9}\\[8pt] Caio Felipe Correa (10764072)\\[8pt] Jennifer Lins Baia da Silva (10756227)\\[8pt] Nilton Cesar Marques dos Santos (10733175)\end{tabular}}}$ \\
+\end{tabular}\par
 \vspace{-4pt}
 {\color{mackred}\rule{\textwidth}{2.5pt}}
 
-\vspace{0.8cm}
-Github: \url{https://github.com/nltncsr/clique-economia-prefeitura-curitiba-insights}
-
-\vspace{2.5cm}
+\vfill
 \begin{center}
-{\fontsize{26}{34}\selectfont\bfseries Projeto: Análise da variabilidade de preço de itens essenciais em supermercados de uma capital brasileira\par}
+{\fontsize{26}{34}\selectfont\bfseries Análise exploratória da evolução de preços da Cesta Básica em Curitiba\par}
 \vspace{0.8cm}
 {\large Proposta analítica e análise exploratória de dados}
 \end{center}
+\vfill
 \clearpage
 
 \tableofcontents

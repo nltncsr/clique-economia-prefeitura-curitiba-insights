@@ -4,8 +4,10 @@
 * **Disciplina**: Projeto Aplicado I
 * **Instituição**: Universidade Presbiteriana Mackenzie
 * **Grupo**: 9
-* **Integrantes**: Jennifer Lins Baia da Silva (10756227) e 
-Nilton Cesar Marques dos Santos (10733175)
+* **Integrantes**:
+  * Caio Felipe Correa (10764072)
+  * Jennifer Lins Baia da Silva (10756227)
+  * Nilton Cesar Marques dos Santos (10733175)
 
 ---
 

@@ -1,0 +1,4 @@
+.venv
+*.tex
+*.ipynb
+.DS_Store
